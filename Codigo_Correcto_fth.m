@@ -89,7 +89,7 @@ while ishandle(hFig)  % Mientras la ventana de video esté abierta
 
     % Si no se detectó el AprilTag correcto, detener el carrito
     if ~tag_detected
-        write(bt, "SPEED,0,0\n", "string");
+        write(bt, "0,0\n", "string");
         continue;
     end
 
@@ -100,7 +100,7 @@ while ishandle(hFig)  % Mientras la ventana de video esté abierta
     % Verificar si el carrito ha llegado al punto deseado
     error_norm = norm(alpha_d - alpha);
     if error_norm < tol
-        write(bt, "SPEED,0,0\n", "string");
+        write(bt, "0,0\n", "string");
         break;
     end
 
@@ -126,7 +126,7 @@ while ishandle(hFig)  % Mientras la ventana de video esté abierta
     phi_der = max(min(w_p(2), 5), -5);
 
     % Enviar velocidades al ESP32
-    data = sprintf("SPEED,%.2f,%.2f\n", -phi_izq, phi_der);
+    data = sprintf("%.2f,%.2f\n", -phi_izq, phi_der);
     write(bt, data, "string");
 
     % Mostrar salida de velocidades en la consola
@@ -188,5 +188,3 @@ function alpha = variable_de_salida(x, y, th)
     % Retornar las coordenadas del punto alpha en un vector columna
     alpha = [p; q];
 end
-
-
