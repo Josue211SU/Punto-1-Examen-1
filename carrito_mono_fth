@@ -8,31 +8,30 @@
 BluetoothSerial SerialBT;
 const char* deviceName = "Carrito_Mono_2";
 
-// Pines de los servos
+// Definición de pines para los servos
 #define SERVO_IZQ 12  
 #define SERVO_DER 13  
 
 Servo servoIzq;
 Servo servoDer;
 
-// PWM para servos MG90S 360°
+// Valores de PWM para control de servos
 const int DUTY_AVANZA = 2000;
 const int DUTY_RETROCEDE = 1000;
 const int DUTY_DETENER = 1500;
 
-// Velocidad máxima y zona muerta
+// Parámetros de velocidad
 const float MAX_VEL_RAD_S = 10.0;
 const float ZONA_MUERTA = 0.5;
 
-// Función mejorada de velocidad a PWM
+// Función para convertir velocidad a señal PWM
 int velocidadToPWM(float velocidad) {
     velocidad = constrain(velocidad, -MAX_VEL_RAD_S, MAX_VEL_RAD_S);
     
     if (abs(velocidad) < ZONA_MUERTA) {
-        return DUTY_DETENER;  // Ahora sí se detiene completamente
+        return DUTY_DETENER;
     }
-
-    // Interpolación lineal
+    
     float pwm = map(velocidad, -MAX_VEL_RAD_S, MAX_VEL_RAD_S, DUTY_RETROCEDE, DUTY_AVANZA);
     return round(pwm);
 }
@@ -53,25 +52,22 @@ void loop() {
         String data = SerialBT.readStringUntil('\n');
         Serial.print("📩 Recibido: ");
         Serial.println(data);
-        
-        if (data.startsWith("SPEED,")) {
-            processCommand(data);
-        }
+
+        processCommand(data);
 
         SerialBT.println("✅ ESP32 recibió: " + data);
     }
 }
 
+// Procesamiento del comando recibido
 void processCommand(String command) {
     command.trim();
-    command.replace("SPEED,", "");
-
+    
     int commaIndex = command.indexOf(',');
     if (commaIndex > 0) {
         float wi = command.substring(0, commaIndex).toFloat();
         float wd = command.substring(commaIndex + 1).toFloat();
 
-        // ✅ Ya no se fuerza a ±2 rad/s, se deja en 0
         if (abs(wi) < ZONA_MUERTA) wi = 0;
         if (abs(wd) < ZONA_MUERTA) wd = 0;
 
@@ -83,7 +79,7 @@ void processCommand(String command) {
         int pwmIzq = velocidadToPWM(wi);
         int pwmDer = velocidadToPWM(wd);
 
-        pwmDer = 3000 - pwmDer;  // Invertir dirección si es necesario
+        pwmDer = 3000 - pwmDer;
 
         servoIzq.writeMicroseconds(pwmIzq);
         servoDer.writeMicroseconds(pwmDer);
@@ -95,6 +91,7 @@ void processCommand(String command) {
     }
 }
 
+// Función para detener los motores
 void detener_motores() {
     servoIzq.writeMicroseconds(DUTY_DETENER);
     servoDer.writeMicroseconds(DUTY_DETENER);
